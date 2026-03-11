@@ -10,9 +10,19 @@
 
 # production
 /build
+/dist
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
 
 # misc
 .DS_Store
+Thumbs.db
 .env.local
 .env.development.local
 .env.test.local
