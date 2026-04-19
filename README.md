@@ -1,70 +1,103 @@
-# Getting Started with Create React App
+# ✈️ SkyWay Airlines — Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-featured airline reservation system built with React.js, connected to a Node.js/Express backend with MySQL database.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Tech Stack
 
-### `npm start`
+- **Frontend:** React.js, Tailwind CSS, Framer Motion
+- **API calls:** Axios
+- **Routing:** React Router v6
+- **Notifications:** React Hot Toast
+- **Icons:** React Icons
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## ⚙️ Setup Instructions
 
-### `npm test`
+### 1. Clone the repository
+```bash
+git clone https://github.com/Aliza-kanwal/Skyway_FrontendE.git
+cd Skyway_Frontend
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 2. Install dependencies
+```bash
+npm install
+```
 
-### `npm run build`
+### 3. Create your `.env` file
+Create a `.env` file in the root folder and add:
+REACT_APP_API_URL=http://localhost:5000/api
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 4. Make sure backend is running
+The backend must be running on port 5000 before starting the frontend.
+Ask your backend teammate for the backend repo and setup instructions.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 5. Start the frontend
+```bash
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Frontend will run on `http://localhost:3001`
+---
 
-### `npm run eject`
+## 🗂️ Project Structure
+src/
+├── components/
+│   ├── common/          # Navbar, Footer, ChatBot
+│   ├── flights/         # FlightCard, FlightSearchForm
+│   └── ui/              # Reusable UI components
+├── context/             # AuthContext
+├── hooks/               # Custom hooks
+├── pages/
+│   ├── user/            # Landing, Search, Booking, Profile pages
+│   └── admin/           # Admin dashboard pages
+└── services/
+└── api/             # All API calls (flights, bookings, airports)
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 📱 Features
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- 🔍 Search flights by route and date
+- ✈️ View flight details and select seats
+- 📋 Book flights (login required)
+- ❌ Cancel bookings
+- 👤 User profile with booking history
+- 🤖 AI chatbot for travel assistance
+- 🛡️ Admin panel for managing flights, airports & bookings
+- 📱 Fully responsive design
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🔗 API Endpoints Used
 
-## Learn More
+| Feature | Endpoint |
+|---|---|
+| Search flights | `GET /api/flights/search` |
+| Get airports | `GET /api/airports` |
+| Login | `POST /api/auth/login` |
+| Register | `POST /api/auth/register` |
+| My bookings | `GET /api/bookings/my` |
+| Create booking | `POST /api/bookings` |
+| Cancel booking | `PUT /api/bookings/:id/cancel` |
+| Admin bookings | `GET /api/admin/bookings` |
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 👥 Team
 
-### Code Splitting
+- **Frontend:** [Aliza Kanwal]
+- **Backend:** [Emaan Arif Khan]
+- **DB Architect:** [Sameen Ali]
+- **QA LEAD:** [Masooma Abidi]
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## 📝 Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Make sure MySQL is running before starting the backend
+- Default backend port is `5000`
+- Default frontend port is `3001`
+- Admin panel accessible at `/admin/login`
