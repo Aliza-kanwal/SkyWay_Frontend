@@ -2,12 +2,18 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const Tabs = ({ tabs, activeTab, onChange, className = '' }) => {
+
+  const handleTabChange = (tabId) => {
+    onChange(tabId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className={`bg-white/80 backdrop-blur-sm p-1.5 rounded-2xl shadow-lg inline-flex ${className}`}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          onClick={() => onChange(tab.id)}
+          onClick={() => handleTabChange(tab.id)}  // 👈 only change
           className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
             activeTab === tab.id
               ? 'text-white'

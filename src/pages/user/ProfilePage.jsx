@@ -23,7 +23,7 @@ import { getUserBookings } from '../../services/api/bookingAPI';
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = () => {
-  const { user, logout } = useAuth();
+   const { user } = useAuth();  
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bookings');
   const [bookings, setBookings] = useState([]);
@@ -53,11 +53,10 @@ const ProfilePage = () => {
     { id: 'settings', label: 'Settings', icon: FaCog },
   ];
 
-  const userStats = [
-    { label: 'Total Flights', value: '24', icon: FaPlane },
-    { label: 'Miles Flown', value: '48,392', icon: FaMapMarkerAlt },
-    { label: 'Member Since', value: '2022', icon: FaCalendarAlt },
-    { label: 'Tier Status', value: 'Gold', icon: FaStar, highlight: true },
+   const userStats = [
+    { label: 'Total Flights', value: bookings.length, icon: FaPlane },
+    { label: 'Member Since', value: user?.createdAt?.split('-')[0] || '2024', icon: FaCalendarAlt },
+    { label: 'Status', value: user?.role === 'admin' ? 'Admin' : 'Gold Member', icon: FaStar, highlight: true },
   ];
 
   const upcomingBookings = bookings.filter(b => b.status === 'confirmed');
@@ -184,27 +183,6 @@ const ProfilePage = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="mt-6 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl 
-                          border border-blue-100/50 p-6">
-              <h3 className="font-semibold text-gray-800 mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <button className="w-full p-3 text-left bg-blue-50 hover:bg-blue-100 
-                                 rounded-xl transition flex items-center space-x-3">
-                  <FaDownload className="text-blue-600" />
-                  <span>Download Boarding Pass</span>
-                </button>
-                <button className="w-full p-3 text-left bg-blue-50 hover:bg-blue-100 
-                                 rounded-xl transition flex items-center space-x-3">
-                  <FaPrint className="text-blue-600" />
-                  <span>Print Itinerary</span>
-                </button>
-                <button className="w-full p-3 text-left bg-blue-50 hover:bg-blue-100 
-                                 rounded-xl transition flex items-center space-x-3">
-                  <FaShieldAlt className="text-blue-600" />
-                  <span>Add Travel Insurance</span>
-                </button>
-              </div>
-            </div>
           </motion.div>
 
           {/* Main Content Area */}
@@ -357,58 +335,27 @@ const ProfilePage = () => {
               )}
 
               {activeTab === 'favorites' && (
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">Favorite Routes</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-gradient-to-r from-yellow-50 to-orange-50 
-                                            rounded-xl p-6 border border-yellow-200">
-                        <div className="flex items-center justify-between mb-4">
-                          <FaHeart className="text-2xl text-red-500" />
-                          <span className="text-sm text-gray-500">Saved on Mar 15</span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-lg font-bold mb-2">
-                          <span>NYC</span>
-                          <span>→</span>
-                          <span>LAX</span>
-                        </div>
-                        <p className="text-gray-600 mb-4">Starting from $299</p>
-                        <button className="w-full py-2 bg-gradient-to-r from-blue-600 
-                                         to-indigo-600 text-white rounded-xl font-medium
-                                         hover:shadow-lg transition">
-                          Book Now
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+  <div className="text-center py-16">
+    <FaHeart className="text-5xl text-gray-300 mx-auto mb-4" />
+    <h2 className="text-xl font-bold text-gray-500 mb-2">No Saved Routes</h2>
+    <p className="text-gray-400">Save your favourite routes and they'll appear here.</p>
+  </div>
+)}
+{activeTab === 'notifications' && (
+  <div className="text-center py-16">
+    <FaBell className="text-5xl text-gray-300 mx-auto mb-4" />
+    <h2 className="text-xl font-bold text-gray-500 mb-2">No Notifications</h2>
+    <p className="text-gray-400">You're all caught up!</p>
+  </div>
+)}
 
-              {activeTab === 'payments' && (
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">Payment Methods</h2>
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 rounded-xl p-6 border-2 border-blue-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <FaCreditCard className="text-3xl text-blue-600" />
-                          <div>
-                            <p className="font-semibold">•••• •••• •••• 4242</p>
-                            <p className="text-sm text-gray-500">Expires 12/25</p>
-                          </div>
-                        </div>
-                        <span className="px-3 py-1 bg-green-500 text-white 
-                                       rounded-full text-sm">Default</span>
-                      </div>
-                    </div>
-                    <button className="w-full py-3 border-2 border-blue-600 text-blue-600 
-                                     rounded-xl font-medium hover:bg-blue-600 
-                                     hover:text-white transition">
-                      + Add New Payment Method
-                    </button>
-                  </div>
-                </div>
-              )}
+            {activeTab === 'payments' && (
+  <div className="text-center py-16">
+    <FaCreditCard className="text-5xl text-gray-300 mx-auto mb-4" />
+    <h2 className="text-xl font-bold text-gray-500 mb-2">No Payment Methods</h2>
+    <p className="text-gray-400">Payment integration coming soon.</p>
+  </div>
+)}
             </div>
           </motion.div>
         </div>

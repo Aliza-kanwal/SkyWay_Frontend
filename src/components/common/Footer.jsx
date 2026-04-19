@@ -107,7 +107,7 @@ const Footer = () => {
               <div>
                 <span className="font-bold text-2xl bg-gradient-to-r from-blue-400 
                                to-indigo-400 bg-clip-text text-transparent">
-                  SkyWings
+                  SkyWay
                 </span>
                 <span className="block text-xs text-gray-400">Premium Airlines</span>
               </div>
@@ -280,7 +280,7 @@ const Footer = () => {
             | Proudly serving passengers worldwide since 1995
           </p>
           <p className="mt-2 text-xs">
-            SkyWings is a registered trademark. All trademarks are property 
+            SkyWay is a registered trademark. All trademarks are property 
             of their respective owners.
           </p>
         </div>

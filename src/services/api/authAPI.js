@@ -1,36 +1,48 @@
-// Remove the import for now since we're using mock data
-// import api from './api';
+import api from './axiosConfig';
+import toast from 'react-hot-toast';
 
 export const login = async (email, password) => {
-  // Mock response - replace with actual API call
-  return {
-    token: 'mock-token-' + Date.now(),
-    user: { id: 1, name: 'Test User', email }
-  };
+  try {
+    const response = await api.post('/auth/login', { email, password });
+    toast.success('Login successful! Welcome back.');
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Login failed. Please check your credentials.';
+    toast.error(message);
+    throw error;
+  }
 };
 
 export const signup = async (userData) => {
-  // Mock response - replace with actual API call
-  return {
-    token: 'mock-token-' + Date.now(),
-    user: { id: 1, name: userData.name, email: userData.email }
-  };
+  try {
+    const response = await api.post('/auth/register', userData);
+    toast.success('Registration successful! Please login.');
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Registration failed. Please try again.';
+    toast.error(message);
+    throw error;
+  }
 };
 
 export const logout = async () => {
-  // Mock logout
-  return { success: true };
+  try {
+    const response = await api.post('/auth/logout');
+    toast.success('Logged out successfully');
+    return response.data;
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Still clear local storage even if API fails
+    localStorage.removeItem('token');
+    toast.success('Logged out successfully');
+  }
 };
 
 export const getCurrentUser = async () => {
-  // Mock get user - replace with actual API call
-  const token = localStorage.getItem('token');
-  if (token) {
-    return { 
-      id: 1, 
-      name: 'Test User', 
-      email: 'test@example.com' 
-    };
+  try {
+    const response = await api.get('/auth/me');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
   }
-  return null;
 };

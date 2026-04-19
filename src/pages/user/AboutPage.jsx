@@ -56,7 +56,7 @@ const AboutPage = () => {
       animate={{ opacity: 1, y: 0 }}
       className="text-5xl md:text-6xl font-bold mb-6"
     >
-      About SkyWings
+      About SkyWay
     </motion.h1>
     <motion.p 
       initial={{ opacity: 0, y: 20 }}
@@ -108,7 +108,7 @@ const AboutPage = () => {
               </span>
             </h2>
             <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-              Founded in 1995 by former pilot Sarah Johnson, SkyWings began with a simple vision: 
+              Founded in 1995 by former pilot Sarah Johnson, SkyWay began with a simple vision: 
               to make air travel comfortable, affordable, and memorable for everyone.
             </p>
             <p className="text-lg text-gray-700 mb-4 leading-relaxed">

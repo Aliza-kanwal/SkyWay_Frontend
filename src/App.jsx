@@ -15,7 +15,7 @@ import BookingConfirmationPage from './pages/user/BookingConfirmationPage';
 import MyBookingsPage from './pages/user/MyBookingsPage';
 import ProfilePage from './pages/user/ProfilePage';
 import AboutPage from './pages/user/AboutPage';
-import DealsPage from './pages/user/DealsPage';
+//import DealsPage from './pages/user/DealsPage';
 import LoginPage from './pages/user/LoginPage';
 import RegisterPage from './pages/user/RegisterPage';
 
@@ -43,7 +43,7 @@ function App() {
               <Route path="/search" element={<SearchResultsPage />} />
               <Route path="/flight/:id" element={<FlightDetailsPage />} />
               <Route path="/about" element={<AboutPage />} />
-              <Route path="/deals" element={<DealsPage />} />
+              {/* <Route path="/deals" element={<DealsPage />} /> */}
               
               {/* Protected User Routes */}
               <Route 

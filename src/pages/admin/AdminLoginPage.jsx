@@ -48,7 +48,7 @@ const AdminLoginPage = () => {
                         rounded-2xl mx-auto mb-4 flex items-center justify-center">
             <FaUserShield className="text-4xl text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Login</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">SkyWay Admin Login</h1>
           <p className="text-gray-400">Enter your credentials to access admin panel</p>
         </div>
 

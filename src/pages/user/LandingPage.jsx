@@ -1,68 +1,115 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import HeroSection from '../../components/common/HeroSection';
 import FlightSearchForm from '../../components/flights/FlightSearchForm';
 import { searchFlights } from '../../services/api/flightAPI';
+import { getAirports } from '../../services/api/airportAPI';
 import toast from 'react-hot-toast';
 import { FaPlane, FaGlobe, FaShieldAlt, FaClock } from 'react-icons/fa';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [airports, setAirports] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [destinationsLoading, setDestinationsLoading] = useState(true);
 
-  const handleSearch = async (searchParams) => {
-    setLoading(true);
-    try {
-      const results = await searchFlights(searchParams);
-      navigate('/search-results', { 
-        state: { 
-          flights: results, 
-          searchParams 
-        } 
-      });
-    } catch (error) {
-      toast.error('Failed to search flights. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  // Load airports on component mount
+  useEffect(() => {
+    loadAirports();
+  }, []);
+
+  const loadAirports = async () => {
+  try {
+    // ✅ Fetch actual flights from DB instead of hardcoded airports
+    const response = await fetch('http://localhost:5000/api/flights');
+    const flights = await response.json();
+
+    // Get unique destination airport codes from real flights
+    const uniqueDestCodes = [...new Set(flights.map(f => f.to))];
+
+    // Fetch all airports to get their details
+    const allAirports = await getAirports();
+
+    // Only show airports that actually have flights going there
+    const featured = uniqueDestCodes
+      .map(code => allAirports.find(a => a.code === code))
+      .filter(Boolean)
+      .slice(0, 6); // max 6 destinations
+
+    setAirports(featured);
+  } catch (error) {
+    console.error('Failed to load airports:', error);
+  } finally {
+    setDestinationsLoading(false);
+  }
+};
+
+  // Helper function to get prices based on destination
+  const getPriceForDestination = (code) => {
+    const prices = {
+      'KHI': '15,000',
+      'LHE': '12,000',
+      'ISB': '18,000',
+      'PEW': '19,000',
+      'UET': '22,000',
+      'MUX': '12,000',
+      'SKT': '13,000',
+      'LYP': '11,000',
+      'DXB': '45,000',
+      'AUH': '48,000',
+      'DOH': '55,000',
+      'MCT': '50,000',
+      'RUH': '60,000',
+      'DEL': '35,000',
+      'IST': '95,000',
+    };
+    return prices[code] || '25,000';
   };
 
-  const features = [
-    {
-      icon: FaPlane,
-      title: '500+ Daily Flights',
-      description: 'Wide selection of flights to choose from'
-    },
-    {
-      icon: FaGlobe,
-      title: '150+ Destinations',
-      description: 'Fly to major cities around the world'
-    },
-    {
-      icon: FaShieldAlt,
-      title: 'Safe & Secure',
-      description: 'Your safety is our top priority'
-    },
-    {
-      icon: FaClock,
-      title: '24/7 Support',
-      description: 'Round-the-clock customer assistance'
-    }
-  ];
+  // ✅ Fix - receive both results and searchData
+const handleSearch = async (results, searchData) => {
+  console.log('Results received:', results); // Check console to see if results exist
+  console.log('Search data:', searchData);
+  
+  // Navigate to the search page with results
+  navigate('/search', { 
+    state: { 
+      flights: results, 
+      searchParams: searchData 
+    } 
+  });
+};
+  // Popular destinations for display
+  const popularDestinations = airports.map(airport => ({
+    city: airport.city,
+    code: airport.code,
+    price: `PKR ${getPriceForDestination(airport.code)}`,
+    image: getImageForDestination(airport.code)
+  }));
 
-  const popularDestinations = [
-    { city: 'New York', code: 'JFK', price: '$299', image: '🗽' },
-    { city: 'Los Angeles', code: 'LAX', price: '$349', image: '🎬' },
-    { city: 'London', code: 'LHR', price: '$399', image: '🇬🇧' },
-    { city: 'Tokyo', code: 'HND', price: '$599', image: '🗼' },
-    { city: 'Paris', code: 'CDG', price: '$449', image: '🗼' },
-    { city: 'Dubai', code: 'DXB', price: '$499', image: '🏜️' }
+  // Helper for destination images
+  function getImageForDestination(code) {
+    const images = {
+      'KHI': '🏖️',
+      'LHE': '🏛️',
+      'ISB': '🏔️',
+      'DXB': '🏜️',
+      'IST': '🕌',
+      'DOH': '🏙️'
+    };
+    return images[code] || '✈️';
+  }
+
+  const features = [
+    { icon: FaPlane, title: '500+ Daily Flights', description: 'Wide selection of flights to choose from' },
+    { icon: FaGlobe, title: '150+ Destinations', description: 'Fly to major cities around the world' },
+    { icon: FaShieldAlt, title: 'Safe & Secure', description: 'Your safety is our top priority' },
+    { icon: FaClock, title: '24/7 Support', description: 'Round-the-clock customer assistance' }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100/50">
-      {/* Hero Section with Search */}
       <HeroSection />
       
       {/* Search Form - Overlapping Hero */}
@@ -134,43 +181,72 @@ const LandingPage = () => {
             Most booked destinations this month
           </motion.p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {popularDestinations.map((dest, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl 
-                         overflow-hidden border border-blue-100/50 cursor-pointer
-                         hover:shadow-2xl transition-all duration-300"
-                onClick={() => handleSearch({ to: dest.code, from: 'ANY' })}
-              >
-                <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600 
-                              relative flex items-center justify-center">
-                  <span className="text-6xl opacity-50">{dest.image}</span>
-                </div>
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-xl font-bold text-gray-800">{dest.city}</h3>
-                    <span className="text-sm text-gray-500">{dest.code}</span>
+          {destinationsLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {popularDestinations.map((dest, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl 
+                           overflow-hidden border border-blue-100/50 cursor-pointer
+                           hover:shadow-2xl transition-all duration-300"
+               onClick={async () => {
+  try {
+    // ✅ Fetch all flights and filter by destination
+    const response = await fetch('http://localhost:5000/api/flights');
+    const allFlights = await response.json();
+
+    const results = allFlights.filter(f => f.to === dest.code);
+
+    navigate('/search', {
+      state: {
+        flights: results,
+        searchParams: {
+          from: 'KHI',
+          to: dest.code,
+          departureDate: results[0]?.departureTime?.split('T')[0] || '',
+          passengers: 1,
+          class: 'economy'
+        }
+      }
+    });
+  } catch (error) {
+    toast.error('Could not load flights for this destination.');
+  }
+}}
+                >
+                  <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600 
+                                relative flex items-center justify-center">
+                    <span className="text-6xl opacity-50">{dest.image}</span>
                   </div>
-                  <p className="text-2xl font-bold text-blue-600 mb-4">
-                    {dest.price}
-                    <span className="text-sm font-normal text-gray-500"> starting</span>
-                  </p>
-                  <button className="w-full py-2 bg-gradient-to-r from-blue-600 
-                                   to-indigo-600 text-white rounded-xl font-medium
-                                   hover:shadow-lg transform hover:scale-105 
-                                   transition-all duration-300">
-                    View Flights
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-xl font-bold text-gray-800">{dest.city}</h3>
+                      <span className="text-sm text-gray-500">{dest.code}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-600 mb-4">
+                      {dest.price}
+                      <span className="text-sm font-normal text-gray-500"> starting</span>
+                    </p>
+                    <button className="w-full py-2 bg-gradient-to-r from-blue-600 
+                                     to-indigo-600 text-white rounded-xl font-medium
+                                     hover:shadow-lg transform hover:scale-105 
+                                     transition-all duration-300">
+                      View Flights
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

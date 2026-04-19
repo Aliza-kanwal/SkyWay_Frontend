@@ -61,19 +61,18 @@ const HeroSection = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-primary text-lg px-8"
-              onClick={() => window.scrollTo({ top: document.getElementById('search-section').offsetTop, behavior: 'smooth' })}
-            >
-              Search Flights
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-8 rounded-xl backdrop-blur-sm transition-all"
-            >
-              Explore Deals
+              onClick={() => {
+    const searchSection = document.getElementById('search-section');
+    if (searchSection) {
+      searchSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/search');
+    }
+  }}
+  className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold 
+             text-lg hover:shadow-2xl transition-all duration-300"
+>
+  Search Flights
             </motion.button>
           </div>
         </motion.div>
