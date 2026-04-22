@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   FaTachometerAlt, 
   FaPlane, 
-  Fabuilding, 
+  FaBuilding, 
   FaTicketAlt, 
   FaUsers, 
   FaCog,
@@ -19,7 +19,7 @@ const AdminSidebar = () => {
   const menuItems = [
     { path: '/admin', icon: FaTachometerAlt, label: 'Dashboard', exact: true },
     { path: '/admin/flights', icon: FaPlane, label: 'Manage Flights' },
-    { path: '/admin/airports', icon: FaAirport, label: 'Manage Airports' },
+    { path: '/admin/airports', icon: FaBuilding, label: 'Manage Airports' },
     { path: '/admin/bookings', icon: FaTicketAlt, label: 'Manage Bookings' },
     { path: '/admin/users', icon: FaUsers, label: 'Manage Users' },
     { path: '/admin/analytics', icon: FaChartLine, label: 'Analytics' },
@@ -33,7 +33,7 @@ const AdminSidebar = () => {
         <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
           Admin Panel
         </h1>
-        <p className="text-xs text-gray-400 mt-1">SkyWings Airlines</p>
+        <p className="text-xs text-gray-400 mt-1">SkyWay Airlines</p>
       </div>
 
       {/* Menu Items */}

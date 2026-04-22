@@ -1,17 +1,14 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
-// Simple admin check
-const isAdmin = () => {
-  const adminToken = localStorage.getItem('adminToken');
-  return !!adminToken; // Returns true if adminToken exists
-};
-
 const AdminRoute = ({ children }) => {
-  if (!isAdmin()) {
+  // Check for adminData instead of adminToken
+  const adminData = localStorage.getItem('adminData');
+  
+  if (!adminData) {
     return <Navigate to="/admin/login" />;
   }
-
+  
   return children;
 };
 

@@ -24,15 +24,25 @@ const ManageAirportsPage = () => {
   };
 
   const handleAddAirport = async (airportData) => {
-    try {
-      await createAirport(airportData);
-      toast.success('Airport added successfully');
-      loadAirports();
-    } catch (error) {
-      toast.error('Failed to add airport');
-    }
-  };
-
+  try {
+    // Make sure all required fields are present
+    const payload = {
+      code: airportData.code.toUpperCase(),
+      name: airportData.name,
+      city: airportData.city,
+      country: airportData.country,
+      terminal: airportData.terminal || 'Terminal 1'
+    };
+    
+    console.log('Sending airport data:', payload); // Debug
+    await createAirport(payload);
+    toast.success('Airport added successfully');
+    loadAirports();
+  } catch (error) {
+    console.error('Error:', error);
+    toast.error(error.error || 'Failed to add airport');
+  }
+};
   const handleEditAirport = async (airportData) => {
     try {
       await updateAirport(airportData.id, airportData);
