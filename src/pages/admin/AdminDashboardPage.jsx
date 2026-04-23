@@ -32,7 +32,7 @@ const AdminDashboardPage = () => {
     { title: 'Total Flights', value: stats?.totalFlights ?? 0, icon: FaPlane, color: 'from-blue-500 to-blue-600' },
     { title: 'Total Airports', value: stats?.totalAirports ?? 0, icon: FaBuilding, color: 'from-green-500 to-green-600' },
     { title: 'Active Bookings', value: stats?.activeBookings ?? 0, icon: FaTicketAlt, color: 'from-purple-500 to-purple-600' },
-    { title: 'Total Revenue', value: `PKR ${(stats?.revenue || 0).toLocaleString()}`, icon: FaDollarSign, color: 'from-yellow-500 to-yellow-600' },
+    { title: 'Total Revenue', value: `PKR ${(stats?.revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, icon: FaDollarSign, color: 'from-yellow-500 to-yellow-600' },
   ];
 
   if (loading) return (

@@ -19,6 +19,8 @@ import AboutPage from './pages/user/AboutPage';
 import LoginPage from './pages/user/LoginPage';
 import RegisterPage from './pages/user/RegisterPage';
 
+import { ThemeProvider } from './context/ThemeContext';
+
 // Admin imports
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -40,6 +42,7 @@ const AppContent = () => {
       {!isAdminRoute && <Navbar />}
       <main className="flex-grow">
         <Routes>
+          
           {/* User Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -79,7 +82,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <ThemeProvider>
         <AppContent />
+        </ThemeProvider>
       </AuthProvider>
     </Router>
   );

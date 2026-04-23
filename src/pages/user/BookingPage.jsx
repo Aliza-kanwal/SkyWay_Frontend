@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import PaymentModal from '../../components/bookings/PaymentModal';
+import { getSeatsByFlight } from '../../services/api/seatsAPI';
 import { 
   FaPlane, 
   FaUser, 
@@ -12,14 +14,8 @@ import {
   FaArrowLeft,
   FaCalendarAlt,
   FaClock,
-  FaMapMarkerAlt,
-  FaSuitcase,
-  FaUtensils,
-  FaWifi,
-  FaBatteryFull,
   FaArrowRight,
-  FaShieldAlt,
-  FaPercent
+  FaShieldAlt
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { getFlightDetails } from '../../services/api/flightAPI';
@@ -27,12 +23,15 @@ import { createBooking } from '../../services/api/bookingAPI';
 import toast from 'react-hot-toast';
 
 const BookingPage = () => {
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const { flightId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const [flight, setFlight] = useState(location.state?.flight || null);
   const [loading, setLoading] = useState(!flight);
+  const [availableSeats, setAvailableSeats] = useState([]);
+  const [seatsLoading, setSeatsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState({
     passengers: [],
@@ -45,19 +44,21 @@ const BookingPage = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
 
-  // Mock seat map
-  const seatMap = {
-    rows: 10,
-    columns: ['A', 'B', 'C', 'D', 'E', 'F'],
-    bookedSeats: ['1A', '1B', '3C', '4D', '5F', '7A', '8B', '9C']
-  };
+  // Fetch seats when flight loads
+  useEffect(() => {
+    if (flight?.id) {
+      fetchSeatsForFlight();
+    }
+  }, [flight]);
 
+  // Load flight details if not provided
   useEffect(() => {
     if (!flight && flightId) {
       loadFlightDetails();
     }
   }, [flightId]);
 
+  // Calculate total price
   useEffect(() => {
     if (flight && bookingData.passengers.length > 0) {
       const basePrice = flight.price * bookingData.passengers.length;
@@ -75,6 +76,19 @@ const BookingPage = () => {
       navigate('/search');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSeatsForFlight = async () => {
+    setSeatsLoading(true);
+    try {
+      const seats = await getSeatsByFlight(flight.id);
+      setAvailableSeats(seats);
+      console.log('Loaded seats:', seats);
+    } catch (error) {
+      console.error('Failed to fetch seats:', error);
+    } finally {
+      setSeatsLoading(false);
     }
   };
 
@@ -98,42 +112,75 @@ const BookingPage = () => {
   const updatePassenger = (id, field, value) => {
     setBookingData(prev => ({
       ...prev,
-      passengers: prev.passengers.map(p => 
+      passengers: prev.passengers.map(p =>
         p.id === id ? { ...p, [field]: value } : p
       )
     }));
   };
 
-  const handleSeatSelect = (seatId) => {
+  const handleSeatSelect = (seatNumber) => {
     setSelectedSeats(prev => {
-      if (prev.includes(seatId)) {
-        return prev.filter(s => s !== seatId);
+      if (prev.includes(seatNumber)) {
+        return prev.filter(s => s !== seatNumber);
       }
       if (prev.length < bookingData.passengers.length) {
-        return [...prev, seatId];
+        return [...prev, seatNumber];
       }
+      toast.error(`You can only select ${bookingData.passengers.length} seat(s)`);
       return prev;
     });
   };
 
-  const handleSubmit = async () => {
-    if (currentStep === 3) {
-      try {
-        await createBooking({
-          flightId,
-          passengers: bookingData.passengers,
-          seats: selectedSeats,
-          totalPrice,
-          insurance: bookingData.insurance
-        });
-        toast.success('Booking confirmed! Check your email for details');
-        navigate('/profile?tab=bookings');
-      } catch (error) {
-        toast.error('Booking failed. Please try again.');
+  const paymentDetails = {
+    id: flight?.id,
+    from: flight?.from,
+    to: flight?.to,
+    date: flight?.departureTime,
+    flightNumber: flight?.flightNumber,
+    price: totalPrice,
+    passengers: bookingData.passengers,
+    seats: selectedSeats
+  };
+
+  const handlePaymentSuccess = (bookingResponse) => {
+    toast.success('Booking confirmed!');
+    navigate('/booking-confirmation', {
+      state: {
+        booking: bookingResponse,
+        flight: flight,
+        passengers: bookingData.passengers,
+        seats: selectedSeats,
+        totalPrice: totalPrice
       }
-    } else {
-      setCurrentStep(prev => prev + 1);
+    });
+  };
+
+  const handleFinalSubmit = () => {
+    if (selectedSeats.length !== bookingData.passengers.length) {
+      toast.error(`Please select ${bookingData.passengers.length} seat(s)`);
+      return;
     }
+    if (!bookingData.contactEmail || !bookingData.contactPhone) {
+      toast.error('Please fill in contact information');
+      return;
+    }
+    setShowPaymentModal(true);
+  };
+
+  const handleNextStep = () => {
+    if (currentStep === 1) {
+      if (bookingData.passengers.length === 0) {
+        toast.error('Please add at least one passenger');
+        return;
+      }
+      for (const passenger of bookingData.passengers) {
+        if (!passenger.firstName || !passenger.lastName || !passenger.dob || !passenger.passport) {
+          toast.error('Please fill all passenger details');
+          return;
+        }
+      }
+    }
+    setCurrentStep(prev => prev + 1);
   };
 
   const steps = [
@@ -142,6 +189,42 @@ const BookingPage = () => {
     { number: 3, title: 'Payment', icon: FaCreditCard },
     { number: 4, title: 'Confirmation', icon: FaCheckCircle }
   ];
+
+  // Format seats by row for display
+  const getSeatsByRow = () => {
+    const rows = {};
+    availableSeats.forEach(seat => {
+      const row = seat.seat_number.replace(/[A-Z]/g, '');
+      if (!rows[row]) rows[row] = [];
+      rows[row].push(seat);
+    });
+    // Sort rows numerically
+    return Object.keys(rows).sort((a, b) => parseInt(a) - parseInt(b)).map(row => ({
+      row,
+      seats: rows[row].sort((a, b) => {
+        const colA = a.seat_number.match(/[A-Z]/)[0];
+        const colB = b.seat_number.match(/[A-Z]/)[0];
+        return colA.localeCompare(colB);
+      })
+    }));
+  };
+
+  const getSeatClassColor = (seatClass) => {
+    switch(seatClass?.toLowerCase()) {
+      case 'business': return 'bg-purple-100 border-purple-300 hover:bg-purple-200';
+      case 'first': return 'bg-amber-100 border-amber-300 hover:bg-amber-200';
+      default: return 'bg-white border-blue-200 hover:bg-blue-50';
+    }
+  };
+
+  const getSeatTextColor = (seatClass, isSelected) => {
+    if (isSelected) return 'text-white';
+    switch(seatClass?.toLowerCase()) {
+      case 'business': return 'text-purple-700';
+      case 'first': return 'text-amber-700';
+      default: return 'text-gray-700';
+    }
+  };
 
   if (loading) {
     return (
@@ -190,11 +273,11 @@ const BookingPage = () => {
                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                   <span className="flex items-center">
                     <FaCalendarAlt className="mr-1 text-blue-500" />
-                    {new Date(flight?.departureTime).toLocaleDateString()}
+                    {flight?.departureTime ? new Date(flight.departureTime).toLocaleDateString() : 'N/A'}
                   </span>
                   <span className="flex items-center">
                     <FaClock className="mr-1 text-blue-500" />
-                    {flight?.duration}
+                    {flight?.duration} min
                   </span>
                   <span className="flex items-center">
                     <FaPlane className="mr-1 text-blue-500" />
@@ -204,9 +287,9 @@ const BookingPage = () => {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Starting from</p>
-              <p className="text-4xl font-bold text-blue-600">${flight?.price}</p>
-              <p className="text-sm text-gray-500">per person</p>
+              <p className="text-sm text-gray-500">Total Price</p>
+              <p className="text-4xl font-bold text-blue-600">${totalPrice}</p>
+              <p className="text-sm text-gray-500">for {bookingData.passengers.length} passenger(s)</p>
             </div>
           </div>
         </motion.div>
@@ -412,10 +495,8 @@ const BookingPage = () => {
                   Choose {bookingData.passengers.length} seat(s) for your flight
                 </p>
 
-                {/* Seat Map */}
                 <div className="mb-8 overflow-x-auto">
                   <div className="min-w-[600px]">
-                    {/* Aircraft Header */}
                     <div className="flex justify-center mb-8">
                       <div className="bg-blue-600 text-white px-8 py-3 rounded-t-2xl">
                         <FaPlane className="inline mr-2" />
@@ -423,46 +504,58 @@ const BookingPage = () => {
                       </div>
                     </div>
 
-                    {/* Seat Grid */}
-                    <div className="bg-gray-100 p-6 rounded-2xl">
-                      {Array.from({ length: seatMap.rows }, (_, rowIndex) => {
-                        const row = rowIndex + 1;
-                        return (
+                    {seatsLoading ? (
+                      <div className="text-center py-12 bg-gray-100 rounded-2xl">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                        <p className="mt-4 text-gray-500">Loading seats...</p>
+                      </div>
+                    ) : availableSeats.length === 0 ? (
+                      <div className="text-center py-12 bg-gray-100 rounded-2xl">
+                        <p className="text-gray-500">No seats available for this flight</p>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-100 p-6 rounded-2xl">
+                        {getSeatsByRow().map(({ row, seats }) => (
                           <div key={row} className="flex justify-center mb-2">
                             <span className="w-8 flex items-center justify-center font-bold text-gray-500">
                               {row}
                             </span>
-                            {seatMap.columns.map((col) => {
-                              const seatId = `${row}${col}`;
-                              const isBooked = seatMap.bookedSeats.includes(seatId);
-                              const isSelected = selectedSeats.includes(seatId);
+                            {seats.map((seat) => {
+                              const seatNumber = seat.seat_number;
+                              const isBooked = !seat.is_available;
+                              const isSelected = selectedSeats.includes(seatNumber);
+                              const seatClass = seat.class || 'economy';
+                              const col = seatNumber.match(/[A-Z]/)?.[0] || '';
                               
                               return (
                                 <motion.button
-                                  key={seatId}
+                                  key={seat.id}
                                   whileHover={!isBooked ? { scale: 1.1 } : {}}
                                   whileTap={!isBooked ? { scale: 0.95 } : {}}
-                                  onClick={() => !isBooked && handleSeatSelect(seatId)}
+                                  onClick={() => !isBooked && handleSeatSelect(seatNumber)}
                                   disabled={isBooked}
                                   className={`w-12 h-12 m-1 rounded-xl font-medium
-                                            transition-all duration-200 ${
-                                    isBooked
-                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                      : isSelected
-                                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                                      : 'bg-white border-2 border-blue-200 text-gray-700 hover:border-blue-600'
-                                  }`}
+                                            transition-all duration-200 flex flex-col items-center justify-center
+                                            ${isBooked ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : getSeatClassColor(seatClass)}
+                                            ${isSelected ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' : getSeatTextColor(seatClass, isSelected)}`}
+                                  title={`${seatNumber} - ${seatClass}`}
                                 >
-                                  {col}
+                                  <span className="text-sm font-bold">{col}</span>
+                                  <span className="text-xs">
+                                    {seatClass === 'business' ? 'B' : seatClass === 'first' ? 'F' : 'E'}
+                                  </span>
                                 </motion.button>
                               );
                             })}
+                            {/* Add empty spaces for missing columns */}
+                            {seats.length < 6 && [...Array(6 - seats.length)].map((_, i) => (
+                              <div key={`empty-${i}`} className="w-12 h-12 m-1"></div>
+                            ))}
                           </div>
-                        );
-                      })}
-                    </div>
+                        ))}
+                      </div>
+                    )}
 
-                    {/* Aircraft Footer */}
                     <div className="flex justify-center mt-4">
                       <div className="bg-gray-800 text-white px-8 py-3 rounded-b-2xl">
                         Rear of Aircraft
@@ -473,7 +566,15 @@ const BookingPage = () => {
                     <div className="flex justify-center space-x-6 mt-6">
                       <div className="flex items-center">
                         <div className="w-6 h-6 bg-white border-2 border-blue-200 rounded mr-2"></div>
-                        <span className="text-sm text-gray-600">Available</span>
+                        <span className="text-sm text-gray-600">Economy</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-purple-100 border-2 border-purple-300 rounded mr-2"></div>
+                        <span className="text-sm text-gray-600">Business</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-amber-100 border-2 border-amber-300 rounded mr-2"></div>
+                        <span className="text-sm text-gray-600">First Class</span>
                       </div>
                       <div className="flex items-center">
                         <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded mr-2"></div>
@@ -487,7 +588,6 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                {/* Selected Seats Summary */}
                 {selectedSeats.length > 0 && (
                   <div className="bg-blue-50 p-4 rounded-xl">
                     <p className="text-sm text-gray-600 mb-1">Selected Seats:</p>
@@ -511,23 +611,34 @@ const BookingPage = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Payment</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Review & Payment</h2>
 
-                {/* Price Breakdown */}
                 <div className="mb-8 p-6 bg-gray-50 rounded-xl">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Price Breakdown</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Booking Summary</h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Base Fare ({bookingData.passengers.length} × ${flight?.price})</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Flight</span>
+                      <span className="font-medium">{flight?.flightNumber} ({flight?.from} → {flight?.to})</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Passengers</span>
+                      <span className="font-medium">{bookingData.passengers.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Seats</span>
+                      <span className="font-medium">{selectedSeats.join(', ')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Base Fare</span>
                       <span className="font-medium">${flight?.price * bookingData.passengers.length}</span>
                     </div>
                     {bookingData.insurance && (
-                      <div className="flex justify-between text-gray-600">
-                        <span>Travel Insurance (5%)</span>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Insurance (5%)</span>
                         <span className="font-medium">${flight?.price * bookingData.passengers.length * 0.05}</span>
                       </div>
                     )}
-                    <div className="border-t border-gray-200 pt-3 mt-3">
+                    <div className="border-t pt-3 mt-3">
                       <div className="flex justify-between text-lg font-bold">
                         <span>Total</span>
                         <span className="text-blue-600">${totalPrice}</span>
@@ -536,7 +647,6 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                {/* Travel Insurance Option */}
                 <div className="mb-8 p-6 border-2 border-blue-100 rounded-xl">
                   <label className="flex items-start space-x-3 cursor-pointer">
                     <input
@@ -558,74 +668,11 @@ const BookingPage = () => {
                   </label>
                 </div>
 
-                {/* Payment Methods */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Payment Method</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    {['credit_card', 'paypal', 'apple_pay'].map((method) => (
-                      <button
-                        key={method}
-                        onClick={() => setBookingData(prev => ({ ...prev, paymentMethod: method }))}
-                        className={`p-4 border-2 rounded-xl flex items-center justify-center
-                                 transition-all duration-300 ${
-                          bookingData.paymentMethod === method
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-blue-300'
-                        }`}
-                      >
-                        {method === 'credit_card' && <FaCreditCard className="text-2xl mr-2 text-blue-600" />}
-                        {method === 'paypal' && <span className="text-2xl mr-2 text-blue-600">Pay</span>}
-                        {method === 'apple_pay' && <span className="text-2xl mr-2 text-gray-800"></span>}
-                        <span className="capitalize">{method.replace('_', ' ')}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {bookingData.paymentMethod === 'credit_card' && (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Card Number
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="1234 5678 9012 3456"
-                          className="w-full p-3 border-2 border-blue-200 rounded-xl 
-                                   focus:border-blue-500 transition-all outline-none"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Expiry Date
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="MM/YY"
-                            className="w-full p-3 border-2 border-blue-200 rounded-xl 
-                                     focus:border-blue-500 transition-all outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            CVV
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="123"
-                            className="w-full p-3 border-2 border-blue-200 rounded-xl 
-                                     focus:border-blue-500 transition-all outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Security Notice */}
-                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-                  <FaLock className="text-green-500" />
-                  <span>Your payment information is encrypted and secure</span>
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <FaLock className="text-green-500 mr-2" />
+                    Your payment is secure and encrypted
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -644,24 +691,50 @@ const BookingPage = () => {
                 Back
               </button>
             )}
-            <button
-              onClick={handleSubmit}
-              disabled={currentStep === 1 && bookingData.passengers.length === 0}
-              className={`px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 
-                       text-white rounded-xl font-medium hover:shadow-xl 
-                       transform hover:scale-105 transition-all duration-300
-                       flex items-center ml-auto ${
-                (currentStep === 1 && bookingData.passengers.length === 0) 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : ''
-              }`}
-            >
-              {currentStep === 3 ? 'Confirm Booking' : 'Continue'}
-              {currentStep < 3 && <FaArrowRight className="ml-2" />}
-            </button>
+            {currentStep === 3 ? (
+              <button
+                onClick={handleFinalSubmit}
+                disabled={bookingData.passengers.length === 0 || selectedSeats.length === 0}
+                className={`px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 
+                         text-white rounded-xl font-medium hover:shadow-xl 
+                         transform hover:scale-105 transition-all duration-300
+                         flex items-center ml-auto ${
+                  (bookingData.passengers.length === 0 || selectedSeats.length === 0) 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : ''
+                }`}
+              >
+                Proceed to Payment
+                <FaCreditCard className="ml-2" />
+              </button>
+            ) : (
+              <button
+                onClick={handleNextStep}
+                disabled={currentStep === 1 && bookingData.passengers.length === 0}
+                className={`px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 
+                         text-white rounded-xl font-medium hover:shadow-xl 
+                         transform hover:scale-105 transition-all duration-300
+                         flex items-center ml-auto ${
+                  (currentStep === 1 && bookingData.passengers.length === 0) 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : ''
+                }`}
+              >
+                Continue
+                <FaArrowRight className="ml-2" />
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        flightDetails={paymentDetails}
+        onSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 };

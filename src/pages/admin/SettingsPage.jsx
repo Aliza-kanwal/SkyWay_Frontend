@@ -3,8 +3,10 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import { FaSave, FaUndo, FaLock, FaBell, FaPalette, FaGlobe } from 'react-icons/fa';
 import { getSettings, updateSettings } from '../../services/api/adminAPI';
 import toast from 'react-hot-toast';
+import { useTheme } from '../../context/ThemeContext';
 
 const SettingsPage = () => {
+   const { themeColor, setThemeColor } = useTheme();
   const [settings, setSettings] = useState({
     siteName: 'SkyWay Airlines',
     siteEmail: 'info@skyway.com',
@@ -193,31 +195,39 @@ const SettingsPage = () => {
           </div>
 
           {/* Appearance Settings */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <FaPalette className="text-blue-600" /> Appearance
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Theme Color</label>
-                <div className="flex gap-3">
-                  {['blue', 'green', 'purple', 'orange', 'red'].map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => handleChange('themeColor', color)}
-                      className={`w-10 h-10 rounded-full transition-all ${
-                        settings.themeColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''
-                      }`}
-                      style={{ backgroundColor: color === 'blue' ? '#3b82f6' : 
-                                              color === 'green' ? '#22c55e' :
-                                              color === 'purple' ? '#a855f7' :
-                                              color === 'orange' ? '#f97316' : '#ef4444' }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+           <div className="bg-white rounded-2xl shadow-lg p-6">
+    <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <FaPalette className="text-blue-600" /> Appearance
+    </h2>
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Theme Color</label>
+        <div className="flex gap-3">
+          {[
+            { name: 'blue', color: '#3b82f6' },
+            { name: 'green', color: '#22c55e' },
+            { name: 'purple', color: '#a855f7' },
+            { name: 'orange', color: '#f97316' },
+            { name: 'red', color: '#ef4444' }
+          ].map((color) => (
+            <button
+              key={color.name}
+              onClick={() => setThemeColor(color.name)}
+              className={`w-10 h-10 rounded-full transition-all ${
+                themeColor === color.name ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''
+              }`}
+              style={{ backgroundColor: color.color }}
+              title={`${color.name} theme`}
+            />
+          ))}
+        </div>
+        <p className="text-sm text-gray-500 mt-2">
+          Current theme: <span className="font-semibold capitalize">{themeColor}</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
 
           {/* System Settings */}
           <div className="bg-white rounded-2xl shadow-lg p-6">

@@ -97,3 +97,57 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply from-blue-500 to-blue-600;
 }
+/* Theme classes */
+.theme-blue .bg-gradient-to-r {
+  --tw-gradient-from: #2563eb;
+  --tw-gradient-to: #1d4ed8;
+}
+
+.theme-green .bg-gradient-to-r {
+  --tw-gradient-from: #16a34a;
+  --tw-gradient-to: #15803d;
+}
+
+.theme-purple .bg-gradient-to-r {
+  --tw-gradient-from: #9333ea;
+  --tw-gradient-to: #7e22ce;
+}
+
+.theme-orange .bg-gradient-to-r {
+  --tw-gradient-from: #ea580c;
+  --tw-gradient-to: #c2410c;
+}
+
+.theme-red .bg-gradient-to-r {
+  --tw-gradient-from: #dc2626;
+  --tw-gradient-to: #b91c1c;
+}
+
+/* For buttons and other elements that use blue */
+.theme-green .bg-blue-600 { background-color: #16a34a; }
+.theme-green .bg-blue-600:hover { background-color: #15803d; }
+.theme-green .text-blue-600 { color: #16a34a; }
+.theme-green .border-blue-600 { border-color: #16a34a; }
+.theme-green .from-blue-600 { --tw-gradient-from: #16a34a; }
+.theme-green .to-indigo-600 { --tw-gradient-to: #15803d; }
+
+.theme-purple .bg-blue-600 { background-color: #9333ea; }
+.theme-purple .bg-blue-600:hover { background-color: #7e22ce; }
+.theme-purple .text-blue-600 { color: #9333ea; }
+.theme-purple .border-blue-600 { border-color: #9333ea; }
+.theme-purple .from-blue-600 { --tw-gradient-from: #9333ea; }
+.theme-purple .to-indigo-600 { --tw-gradient-to: #7e22ce; }
+
+.theme-orange .bg-blue-600 { background-color: #ea580c; }
+.theme-orange .bg-blue-600:hover { background-color: #c2410c; }
+.theme-orange .text-blue-600 { color: #ea580c; }
+.theme-orange .border-blue-600 { border-color: #ea580c; }
+.theme-orange .from-blue-600 { --tw-gradient-from: #ea580c; }
+.theme-orange .to-indigo-600 { --tw-gradient-to: #c2410c; }
+
+.theme-red .bg-blue-600 { background-color: #dc2626; }
+.theme-red .bg-blue-600:hover { background-color: #b91c1c; }
+.theme-red .text-blue-600 { color: #dc2626; }
+.theme-red .border-blue-600 { border-color: #dc2626; }
+.theme-red .from-blue-600 { --tw-gradient-from: #dc2626; }
+.theme-red .to-indigo-600 { --tw-gradient-to: #b91c1c; }

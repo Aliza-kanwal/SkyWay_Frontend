@@ -9,14 +9,33 @@ const BookingConfirmationPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [bookingDetails, setBookingDetails] = useState(location.state?.booking || null);
+  const [flight, setFlight] = useState(location.state?.flight || null);
+  const [passengers, setPassengers] = useState(location.state?.passengers || []);
+  const [selectedSeats, setSelectedSeats] = useState(location.state?.seats || []);
+  const [totalPrice, setTotalPrice] = useState(location.state?.totalPrice || 0);
 
   useEffect(() => {
-    if (!bookingDetails) {
+    if (!bookingDetails && !flight) {
       navigate('/');
     }
-  }, [bookingDetails, navigate]);
+  }, [bookingDetails, flight, navigate]);
 
-  if (!bookingDetails) return null;
+  if (!bookingDetails && !flight) return null;
+
+  // Generate booking reference
+  const bookingRef = bookingDetails?.id 
+    ? `SKY${String(bookingDetails.id).padStart(4, '0')}`
+    : `SKY${Math.floor(Math.random() * 10000)}`;
+
+  // Get seat numbers
+  const seatNumbers = selectedSeats.length > 0 
+    ? selectedSeats.join(', ') 
+    : bookingDetails?.seat_number || bookingDetails?.seats?.join(', ') || 'Not assigned';
+
+  // Get payment info
+  const paymentMethod = bookingDetails?.paymentMethod || 'Credit Card';
+  const cardLast4 = bookingDetails?.cardLast4;
+  const totalAmount = totalPrice || bookingDetails?.totalPrice || bookingDetails?.total_amount || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100/50 py-12">
@@ -32,7 +51,9 @@ const BookingConfirmationPage = () => {
             <FaCheckCircle className="text-white text-5xl" />
           </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-2">Booking Confirmed!</h1>
-          <p className="text-gray-600">Your booking reference: <span className="font-mono font-bold text-blue-600">SKY{Math.floor(Math.random() * 10000)}</span></p>
+          <p className="text-gray-600">
+            Your booking reference: <span className="font-mono font-bold text-blue-600">{bookingRef}</span>
+          </p>
         </motion.div>
 
         {/* Confirmation Card */}
@@ -46,8 +67,14 @@ const BookingConfirmationPage = () => {
               <div className="flex items-center space-x-4">
                 <FaPlane className="text-4xl text-blue-600" />
                 <div>
-                  <h2 className="text-xl font-bold">{bookingDetails.from} → {bookingDetails.to}</h2>
-                  <p className="text-gray-600">{bookingDetails.date}</p>
+                  <h2 className="text-xl font-bold">
+                    {flight?.from || bookingDetails?.from} → {flight?.to || bookingDetails?.to}
+                  </h2>
+                  <p className="text-gray-600">
+                    {flight?.departureTime 
+                      ? new Date(flight.departureTime).toLocaleDateString() 
+                      : bookingDetails?.date || 'N/A'}
+                  </p>
                 </div>
               </div>
               <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
@@ -58,27 +85,46 @@ const BookingConfirmationPage = () => {
             <div className="grid grid-cols-2 gap-6 mb-6">
               <div>
                 <p className="text-sm text-gray-500">Passengers</p>
-                <p className="font-semibold">{bookingDetails.passengers?.length || 1} Passenger(s)</p>
+                <p className="font-semibold">{passengers.length || 1} Passenger(s)</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Flight Number</p>
-                <p className="font-semibold">{bookingDetails.flightNumber}</p>
+                <p className="font-semibold">{flight?.flightNumber || bookingDetails?.flightNumber || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Departure</p>
-                <p className="font-semibold">{bookingDetails.departureTime}</p>
+                <p className="font-semibold">
+                  {flight?.departureTime 
+                    ? new Date(flight.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : bookingDetails?.departureTime || 'N/A'}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Arrival</p>
-                <p className="font-semibold">{bookingDetails.arrivalTime}</p>
+                <p className="font-semibold">
+                  {flight?.arrivalTime 
+                    ? new Date(flight.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : bookingDetails?.arrivalTime || 'N/A'}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Seats</p>
-                <p className="font-semibold">{bookingDetails.seats?.join(', ') || 'Not assigned'}</p>
+                <p className="text-sm text-gray-500">Selected Seats</p>
+                <p className="font-semibold text-lg text-blue-600">{seatNumbers}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Payment Method</p>
+                <p className="font-semibold capitalize">{paymentMethod}</p>
+                {cardLast4 && (
+                  <p className="text-sm text-gray-500">Card ending in {cardLast4}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Booking Reference</p>
+                <p className="font-semibold font-mono text-blue-600">{bookingRef}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Paid</p>
-                <p className="font-semibold text-blue-600">${bookingDetails.totalPrice}</p>
+                <p className="font-semibold text-blue-600 text-xl">${totalAmount}</p>
               </div>
             </div>
 

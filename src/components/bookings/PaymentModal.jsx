@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCreditCard, FaLock, FaTimes, FaCheck } from 'react-icons/fa';
-import { confirmBooking } from '../../services/api/bookingAPI';
+import { createBooking } from '../../services/api/bookingAPI';
 
 const PaymentModal = ({ isOpen, onClose, flightDetails, onSuccess }) => {
   const [form, setForm] = useState({
@@ -42,29 +42,29 @@ const PaymentModal = ({ isOpen, onClose, flightDetails, onSuccess }) => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async () => {
-    if (!validate()) return;
-    setLoading(true);
-    try {
-      const booking = await confirmBooking({
-        flightId: flightDetails.id,
-        passengers: flightDetails.passengers,
-        seats: flightDetails.seats,
-        totalPrice: flightDetails.price,
-        // Do NOT send raw card data to your own backend.
-        // In production, tokenize via Stripe.js first, then send the token.
-        paymentMethod: 'card',
-        last4: form.cardNumber.replace(/\s/g, '').slice(-4),
-      });
-      setConfirmed(true);
-      setTimeout(() => onSuccess(booking), 1500);
-    } catch (err) {
-      setErrors({ submit: 'Payment failed. Please try again.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+ const handleSubmit = async () => {
+  if (!validate()) return;
+  setLoading(true);
+  try {
+    // Send complete booking data
+    const booking = await createBooking({
+      flight_id: flightDetails.id,
+      seat_id: flightDetails.seats?.[0],
+      passengers: flightDetails.passengers,
+      totalPrice: flightDetails.price,
+      paymentMethod: 'card',
+      last4: form.cardNumber.replace(/\s/g, '').slice(-4),
+      cardholderName: form.name
+    });
+    
+    setConfirmed(true);
+    setTimeout(() => onSuccess(booking), 1500);
+  } catch (err) {
+    console.error('Booking error:', err);
+    setErrors({ submit: err.response?.data?.message || 'Payment failed. Please try again.' });
+    setLoading(false);
+  }
+};
   // Card brand detection (basic)
   const getCardBrand = () => {
     const n = form.cardNumber.replace(/\s/g, '');
