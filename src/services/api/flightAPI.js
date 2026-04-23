@@ -14,13 +14,19 @@ export const getFlights = async () => {
   }
 };
 
-// Search flights
 export const searchFlights = async (searchParams) => {
   try {
-    const response = await api.get('/flights/search', { params: searchParams });
+    const response = await api.get('/flights/search', {
+      params: {
+        from: searchParams.from,
+        to: searchParams.to,
+        date: searchParams.departureDate  // ✅ rename departureDate to date
+      }
+    });
     return response.data;
   } catch (error) {
-    throw error.response?.data || error.message;
+    console.error('Failed to search flights:', error);
+    return [];
   }
 };
 

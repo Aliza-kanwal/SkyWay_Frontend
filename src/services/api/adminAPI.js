@@ -100,73 +100,94 @@ export const getAllBookings = async () => {
   }
 };
 
-// ⚠️ No users endpoint in your backend yet — returns empty
 export const getAllUsers = async () => {
-  return [];
+  try {
+    const response = await api.get('/admin/users');
+    return response.data || [];
+  } catch (error) {
+    console.error('Failed to get users:', error);
+    return [];
+  }
 };
 
 export const updateUserRole = async (userId, role) => {
-  console.log('Updating user', userId, 'to role', role);
+  try {
+    const response = await api.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+// ✅ Real analytics from your backend
+export const getAnalytics = async () => {
+  try {
+    const [bookingsRes, flightsRes, airportsRes] = await Promise.all([
+      api.get('/admin/bookings'),
+      api.get('/flights'),
+      api.get('/airports')
+    ]);
+
+    const bookings = bookingsRes.data || [];
+    const flights = flightsRes.data || [];
+
+    const totalRevenue = bookings
+      .filter(b => b.status !== 'Cancelled')
+      .reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0);
+
+    const avgPrice = bookings.length > 0 ? totalRevenue / bookings.length : 0;
+
+    // Count routes
+    const routeMap = {};
+    bookings.forEach(b => {
+      const key = `${b.from_code} → ${b.to_code}`;
+      if (!routeMap[key]) routeMap[key] = { from: b.from_code, to: b.to_code, count: 0, revenue: 0 };
+      routeMap[key].count++;
+      routeMap[key].revenue += parseFloat(b.price) || 0;
+    });
+
+    const popularRoutes = Object.values(routeMap)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      totalBookings: bookings.length,
+      totalRevenue,
+      totalPassengers: bookings.length,
+      avgPrice: Math.round(avgPrice),
+      popularRoutes,
+      monthlyTrends: [],
+      recentActivity: []
+    };
+  } catch (error) {
+    console.error('Analytics error:', error);
+    return {
+      totalBookings: 0, totalRevenue: 0,
+      totalPassengers: 0, avgPrice: 0,
+      popularRoutes: [], monthlyTrends: [], recentActivity: []
+    };
+  }
+};
+
+// ✅ Settings - just local for now (no backend endpoint)
+export const getSettings = async () => ({
+  siteName: 'SkyWay Airlines',
+  siteEmail: 'info@skyway.com',
+  sitePhone: '+92 21 111 000 000',
+  timezone: 'Asia/Karachi',
+  currency: 'PKR',
+  emailNotifications: true,
+  smsNotifications: false,
+  maintenanceMode: false,
+  themeColor: 'blue'
+});
+
+export const updateSettings = async (settings) => {
+  console.log('Settings saved locally:', settings);
   return { success: true };
 };
 
-export const getAnalytics = async () => {
-  try {
-    const response = await api.get('/admin/analytics');
-    return response.data;
-  } catch (error) {
-    // Mock data for now
-    return {
-      totalBookings: 1250,
-      totalRevenue: 15250000,
-      totalPassengers: 2340,
-      avgPrice: 12200,
-      popularRoutes: [
-        { from: 'KHI', to: 'LHE', count: 234, revenue: 2800000 },
-        { from: 'KHI', to: 'ISB', count: 189, revenue: 3400000 },
-        { from: 'LHE', to: 'DXB', count: 156, revenue: 7020000 },
-      ],
-      monthlyTrends: [
-        { month: 'Jan', bookings: 120, revenue: 1400000 },
-        { month: 'Feb', bookings: 135, revenue: 1600000 },
-        { month: 'Mar', bookings: 150, revenue: 1800000 },
-      ],
-      recentActivity: [
-        { action: 'New booking created', user: 'john@example.com', time: '2 hours ago', date: '2024-03-20' },
-        { action: 'Flight schedule updated', user: 'admin@skyway.com', time: '5 hours ago', date: '2024-03-20' },
-      ]
-    };
-  }
-};
 
-export const getSettings = async () => {
-  try {
-    const response = await api.get('/admin/settings');
-    return response.data;
-  } catch (error) {
-    return {
-      siteName: 'SkyWay Airlines',
-      siteEmail: 'info@skyway.com',
-      sitePhone: '+92 21 111 000 000',
-      timezone: 'Asia/Karachi',
-      currency: 'PKR',
-      emailNotifications: true,
-      smsNotifications: false,
-      maintenanceMode: false,
-      themeColor: 'blue'
-    };
-  }
-};
-
-export const updateSettings = async (settings) => {
-  try {
-    const response = await api.put('/admin/settings', settings);
-    return response.data;
-  } catch (error) {
-    console.log('Settings saved locally');
-    return { success: true };
-  }
-};
 // Get all bookings (existing)
 
 // Add airport - FIXED to match backend

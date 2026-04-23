@@ -51,37 +51,25 @@ const ManageFlightsPage = () => {
   
 };
 
- const handleAddFlight = async (flightData) => {
+const handleAddFlight = async (flightData) => {
   try {
-    console.log('Received flight data:', flightData); // Debug - see what data is coming
-    
-    // Get airport IDs from codes
-    const departureAirport = airports.find(a => a.code === flightData.departure_airport);
-    const arrivalAirport = airports.find(a => a.code === flightData.arrival_airport);
-    
-    if (!departureAirport) {
-      toast.error(`Departure airport ${flightData.departure_airport} not found`);
-      return;
-    }
-    if (!arrivalAirport) {
-      toast.error(`Arrival airport ${flightData.arrival_airport} not found`);
-      return;
-    }
-    
+    console.log('Received flight data:', flightData);
+
+    // ✅ Backend expects codes directly now, not IDs
     const payload = {
-      departure_airport_id: departureAirport.id,
-      arrival_airport_id: arrivalAirport.id,
+      departure_airport: flightData.departure_airport,
+      arrival_airport: flightData.arrival_airport,
       departure_time: flightData.departure_time,
       arrival_time: flightData.arrival_time,
-      duration: flightData.duration,
-      price: flightData.price,
+      duration: parseInt(flightData.duration),
+      price: parseInt(flightData.price),
       airline: flightData.airline,
       aircraft_type: flightData.aircraft_type || 'Boeing 737'
     };
-    
+
     console.log('Sending payload:', payload);
     await createFlight(payload);
-    toast.success('Flight added successfully');
+    toast.success('Flight added successfully!');
     loadData();
   } catch (error) {
     console.error('Error:', error);

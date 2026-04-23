@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaPlane, FaTimes } from 'react-icons/fa';
+import { FaEdit, FaPlus, FaSearch, FaPlane, FaTimes } from 'react-icons/fa';
 
 const FlightTable = ({ flights, airports, onEdit, onDelete, onAdd }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -122,12 +122,6 @@ const FlightTable = ({ flights, airports, onEdit, onDelete, onAdd }) => {
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                   >
                     <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => onDelete?.(flight.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                  >
-                    <FaTrash />
                   </button>
                 </td>
                </tr>

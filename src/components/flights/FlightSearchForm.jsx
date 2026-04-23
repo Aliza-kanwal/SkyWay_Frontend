@@ -26,13 +26,13 @@ const FlightSearchForm = ({ onSearch, loading: externalLoading }) => {
   const [airportOptions, setAirportOptions] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const [searchParams, setSearchParams] = useState({
-    from: '',
-    to: '',
-    departureDate: new Date('2026-04-01'),
-    returnDate: new Date('2026-04-08'),
-    passengers: 1,
-    class: 'economy'
-  });
+  from: '',
+  to: '',
+  departureDate: new Date('2026-06-01'),  // ✅ matches your DB
+  returnDate: new Date('2026-06-08'),
+  passengers: 1,
+  class: 'economy'
+});
 
   // Load airports on component mount
   useEffect(() => {
